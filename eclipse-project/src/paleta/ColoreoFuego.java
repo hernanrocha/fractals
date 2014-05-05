@@ -1,9 +1,9 @@
-package coloreo;
+package paleta;
 
 import java.awt.Color;
 import java.util.Vector;
 
-public class ColoreoFuego extends Coloreo {
+public class ColoreoFuego extends Paleta {
 	
 	int[] limites = new int[]{
 			15, 20, 25,
@@ -34,7 +34,7 @@ public class ColoreoFuego extends Coloreo {
 	}
 
 	@Override
-	public int colorear(int valor) {
+	public int getColor(int valor) {
 		for (int i = limites.length - 2; i >= 0; i--){
 			if (valor > limites[i]){
 				return transformar(colores.get(i), colores.get(i + 1), limites[i], limites[i+1], valor).getRGB();

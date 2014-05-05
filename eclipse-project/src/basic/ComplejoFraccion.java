@@ -4,9 +4,10 @@
 package basic;
 
 /**
- * @author hernan
+ * Clase Complejo utilizando fracciones
  *
  */
+@Deprecated
 public class ComplejoFraccion {
 	private Fraccion real2;
 	private Fraccion imag2;

@@ -1,9 +1,9 @@
-package coloreo;
-
+package paleta;
 import java.awt.Color;
 
-public class ColoreoFranja extends Coloreo {
 
+public class ColoreoModulo extends Paleta {
+	
 	private int[] colores = new int[]{
 			Color.RED.getRGB(),
 			Color.GREEN.getRGB(),
@@ -14,9 +14,9 @@ public class ColoreoFranja extends Coloreo {
 	private int cantColores = colores.length;
 
 	@Override
-	public int colorear(int valor) {
+	public int getColor(int valor) {
 		
-		return colores[(valor/3) % cantColores];
+		return colores[valor%cantColores];
 	}
 
 }

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package coloreo;
+package paleta;
 
 import java.awt.Color;
 
@@ -9,7 +9,7 @@ import java.awt.Color;
  * @author hernan
  *
  */
-public class ColoreoLinea extends Coloreo {
+public class ColoreoLinea extends Paleta {
 
 	private int valor;
 	private int margen;
@@ -20,7 +20,7 @@ public class ColoreoLinea extends Coloreo {
 	}
 	
 	@Override
-	public int colorear(int valor) {
+	public int getColor(int valor) {
 		int dif = this.valor - valor;
 		if(dif < 0){
 			dif = -dif;

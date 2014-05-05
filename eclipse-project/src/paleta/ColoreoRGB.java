@@ -1,15 +1,15 @@
-package coloreo;
+package paleta;
 
 import java.awt.Color;
 
 import conjunto.Conjunto;
 
-public class ColoreoRGB extends Coloreo {
+public class ColoreoRGB extends Paleta {
 
 	int base = 10;
 	
 	@Override
-	public int colorear(int valor) {
+	public int getColor(int valor) {
 		
 		if (valor == Conjunto.MAX_ITERACIONES){
 			return Color.BLACK.getRGB();

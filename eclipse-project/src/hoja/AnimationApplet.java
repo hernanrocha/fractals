@@ -1,3 +1,4 @@
+package hoja;
 
 import javax.swing.*;
 import java.awt.*;
