@@ -38,9 +38,18 @@ public class GraficadorSegmento implements Runnable {
 		
 		for (int f = min; f <= max; f++){
 			for (int c = 0; c < width; c++){
+				
+				if (g.moviendo && g.aceleracionMover && f-g.fDelta >= 0 && f-g.fDelta < height && c-g.cDelta >= 0 && c-g.cDelta < width){
+
+					g.matrizNueva[f][c] = g.matriz[f-g.fDelta][c-g.cDelta];
+					
+				}else{
+				
 				double xTemp = xMin + c * (xMax - xMin) / width;
 				double yTemp = yMin + (height - f) * (yMax - yMin) / height;
-				g.matriz[f][c] = conjunto.iterar(new Complejo(xTemp, yTemp));
+				g.matrizNueva[f][c] = conjunto.iterar(new Complejo(xTemp, yTemp));
+				
+				}
 			}
 		}
 		

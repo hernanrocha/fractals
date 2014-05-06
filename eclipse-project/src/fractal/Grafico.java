@@ -23,7 +23,7 @@ public class Grafico {
 	// Variables Screen
 	private int width;
 	private int height;
-	public int[][] matriz;
+	public int[][] matriz, matrizNueva;
 	
 	// Variables Grafico
 	private double xMin;
@@ -37,6 +37,12 @@ public class Grafico {
 	
 	private long tiempoProcesamiento = 0;
 	private int threads = 1;
+	
+	// DEBUG
+	public boolean moviendo = false;
+	public boolean aceleracionMover = true;
+	public int fDelta, cDelta;
+//	public boolean[][] matrizRecalc;
 	
 	public Grafico(Fractales frame, Conjunto conjunto, Paleta coloreo){
 		this.frame = frame;
@@ -80,7 +86,10 @@ public class Grafico {
 			xMax = xMin + difXNuevo;
 		}else if (coordRatio > imgRatio){
 			// TODO Agrandar rango en eje Y
-			System.out.println("Agrandar eje Y (No implementado)");
+			System.out.println("Agrandar eje Y");
+			double difYNuevo = difX / imgRatio;
+			yMin = yMin - (difYNuevo - difY) / 2;
+			yMax = yMin + difYNuevo;
 		}
 		
 		System.out.println("Extremos X: " + xMax + " y " + xMin);
@@ -98,6 +107,8 @@ public class Grafico {
 		int resto = height % threads;
 		
 		System.out.println(div + " y sobran " + resto);
+		System.out.println("ALERTA: DEBUG Aceleracion Mover");
+		matrizNueva = new int[height][width]; // DEBUG
 		
 		int min = 0;
 		for (int i = 0; i < threads; i++){
@@ -119,9 +130,12 @@ public class Grafico {
 			min += salto;
 		}
 		
+		
 		try {
 			// Esperar a que todos los threads terminen
 			s.acquire(threads);
+			matriz = matrizNueva.clone(); // DEBUG
+			moviendo = false; // DEBUG
 			long end = System.currentTimeMillis();
 			tiempoProcesamiento = end - begin;
 		} catch (InterruptedException e) {
@@ -154,15 +168,49 @@ public class Grafico {
 	}
 
 	public void mover(int f, int c) {
+		
+		moviendo = true; // DEBUG
+		
 		double xMove = c * (xMax - xMin) / width;
 		double yMove = f * (yMax - yMin) / height;
 		
-		xMin -= xMove;
-		xMax -= xMove;
-		yMin += yMove;
-		yMax += yMove;
+//		if(aceleracionMover){
+//			int[][] nuevaMatriz = new int[height][width];
+//			matrizRecalc = new boolean[height][width];
+//			
+//			System.out.println("Moviendo acelerado");
+//			int aciertos = 0;
+//			
+//			for (int i = 0; i < height; i++){
+//				for (int j = 0; j < width; j++){
+//					if (i-f >= 0 && i-f < height && j-c >= 0 && j-c < width){
+//						aciertos++;
+//						nuevaMatriz[i][j] = matriz[i-f][j-c];
+//					}else{
+//						nuevaMatriz[i][j] = 0;
+//						matrizRecalc[i][j] = true;
+//					}
+//				}
+//			}
+//			
+//			matriz = nuevaMatriz;
+//			System.out.println("Aciertos " + aciertos);
+//			
+//			if (f > 0){
+//				// Mover hacia abajo
+//			}
+//		}else{
 		
-		calcular();
+		fDelta = f;
+		cDelta = c;
+		
+			xMin -= xMove;
+			xMax -= xMove;
+			yMin += yMove;
+			yMax += yMove;
+
+			calcular();
+//		}
 		
 	}
 	
@@ -173,13 +221,7 @@ public class Grafico {
 		double yMin = getFtoY(fMax);
 		double yMax = getFtoY(fMin);
 		
-		this.xMin = xMin;
-		this.xMax = xMax;
-		this.yMin = yMin;
-		this.yMax = yMax;
-
-		calcularLimites();
-		calcular();
+		setRango(xMin, xMax, yMin, yMax);
 	}
 		
 	public int getWidth() {
@@ -229,5 +271,20 @@ public class Grafico {
 	public void setThreads(int threads) {
 		this.threads = threads;		
 	}
+
+	public void setRango(double xMin, double xMax, double yMin, double yMax) {
+		this.xMin = xMin;
+		this.xMax = xMax;
+		this.yMin = yMin;
+		this.yMax = yMax;
+		
+		calcularLimites();
+		calcular();
+	}
+
+//	public void setAceleracionMover(boolean aceleracionMover) {
+//		this.aceleracionMover = aceleracionMover;
+//		
+//	}
 	
 }

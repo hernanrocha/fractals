@@ -10,7 +10,7 @@ import basic.Punto;
 
 
 public class MouseHandler extends MouseAdapter {
-	private static final int REFRESH_PERIOD = 100;
+	private static final int REFRESH_PERIOD = 20;
 	private int xPos;
 	private int yPos;
 	private Fractales frame;
