@@ -2,47 +2,41 @@ package swing;
 //import Grafico;
 //import ManejadorClicsRaton;
 
-import fractal.Grafico;
-import hoja.Afines;
-import hoja.HelechoBransley;
-
-import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-
-import basic.Complejo;
-import basic.Punto;
-import conjunto.Conjunto;
-import conjunto.ConjuntoMandelbrot;
-
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.text.NumberFormat;
 
-import javax.swing.JMenuBar;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.JFormattedTextField;
-import javax.swing.JCheckBox;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-
-import paleta.Paleta;
-import paleta.ColoreoFuego;
-import paleta.ColoreoRGB;
-import javax.swing.border.TitledBorder;
 import javax.swing.UIManager;
-import java.awt.Color;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import basic.Complejo;
+import fractal.Grafico;
+
+import javax.swing.JComboBox;
+
+import conjunto.ConjuntoJulia;
+import conjunto.ConjuntoMandelbrot;
+import conjunto.Funcion;
+import conjunto.FuncionPolinomica;
 
 /**
  * 
@@ -86,6 +80,8 @@ public class Fractales extends JFrame {
 	private JPanel panelAcciones;
 	private JLabel lblThreads;
 	private JCheckBox chckbxAceleracinDeReclculo;
+	private JPanel panel;
+	private JComboBox comboBox;
 
 	/**
 	 * Launch the application.
@@ -124,7 +120,7 @@ public class Fractales extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
-		gbl_contentPane.columnWidths = new int[]{403, 230, 0};
+		gbl_contentPane.columnWidths = new int[]{400, 230, 0};
 		gbl_contentPane.rowHeights = new int[] {579, 0};
 		gbl_contentPane.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
 		gbl_contentPane.rowWeights = new double[]{1.0, 1.0};
@@ -142,6 +138,7 @@ public class Fractales extends JFrame {
 		lblImagen.addMouseMotionListener(mouseHandler);
 
 		scrollPaneOpciones = new JScrollPane();
+		scrollPaneOpciones.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		GridBagConstraints gbc_scrollPaneOpciones = new GridBagConstraints();
 		gbc_scrollPaneOpciones.insets = new Insets(0, 0, 5, 0);
 		gbc_scrollPaneOpciones.fill = GridBagConstraints.BOTH;
@@ -214,6 +211,54 @@ public class Fractales extends JFrame {
 
 		g.setThreads(10);
 //		g.setAceleracionMover(true);
+		
+		// Conjuntos de Julia
+		// Jc = Conjunto de Julia de parámetro c
+		// Para todo z en el plano Complejo, iterar:
+		//    Z(0) = z
+		//    Z(n+1) = Z(n) ^ 2 + c
+		
+//		Funcion f = new FuncionPolinomica(2, new Complejo(0.279, 0));
+//		Funcion f = new FuncionPolinomica(3, new Complejo(0.4, 0));
+//		Funcion f = new FuncionPolinomica(3, new Complejo(-1, 0));
+//		Funcion f = new FuncionPolinomica(3, new Complejo(0.3, 0.6));
+		
+		// Sitio: http://www.mat.iesvillalbahervas.org/index.php?option=com_content&view=article&id=120:3conjuntos-de-julia-y-mandelbrot&catid=60:fractales&Itemid=134
+//		Funcion f = new FuncionPolinomica(2, new Complejo(0, 0.8));
+//		Funcion f = new FuncionPolinomica(2, new Complejo(-0.8, -0.25));
+//		Funcion f = new FuncionPolinomica(2, new Complejo(-0.8, 0));
+		
+//		Funcion f = new FuncionPolinomica(2, new Complejo(0, 1)); // Fractal Dendrita
+//		Funcion f = new FuncionPolinomica(2, new Complejo(-0.123, 0.745)); // Conejo de Douady
+		 // Fractal de San Marco
+		Funcion f = new FuncionPolinomica(2, new Complejo(-0.391, 0.587)); // Disco de Siegel
+		
+		// Otras funciones
+//		·        z(n+1) = z’(n)^2 + c 
+//				·        z(n+1) = z’(n)^3 + c 
+//				·        z(n+1) = z’(n)^4 + c 
+		// z(n+1) = sen (z/c) ; z(0) = c.
+		
+		// Mas Informacion
+//		http://es.wikipedia.org/wiki/Fractal
+		
+//		int grado = 2;
+//		double real = -0.391;
+//		double imag = 0.587;
+//		
+//		Complejo c = new Complejo(real, imag);
+//		Funcion f = new FuncionPolinomica(grado, c);
+		g.setConjunto(new ConjuntoJulia(f));
+		
+//		Conjuntos conexos (conjuntos de Fatou) y Conjuntos no conexos (conjuntos de Cantor).
+		
+		// Conjuntos Mandelbrot:
+		
+//		int exp = 2;
+//		g.setConjunto(new ConjuntoMandelbrot(exp));
+		
+
+
 	}
 
 	private void agregarPanelOpciones() {
@@ -221,18 +266,40 @@ public class Fractales extends JFrame {
 		scrollPaneOpciones.setViewportView(panelOpciones);
 		GridBagLayout gbl_panelOpciones = new GridBagLayout();
 		gbl_panelOpciones.columnWidths = new int[]{39, 0};
-		gbl_panelOpciones.rowHeights = new int[]{20, 0, 0, 0};
+		gbl_panelOpciones.rowHeights = new int[]{0, 20, 0, 0, 0};
 		gbl_panelOpciones.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_panelOpciones.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panelOpciones.rowWeights = new double[]{1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panelOpciones.setLayout(gbl_panelOpciones);
+		
+		panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "Gr\u00E1fico", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.insets = new Insets(5, 5, 5, 0);
+		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 0;
+		panelOpciones.add(panel, gbc_panel);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{0, 0};
+		gbl_panel.rowHeights = new int[]{0, 0};
+		gbl_panel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
+		
+		comboBox = new JComboBox();
+		GridBagConstraints gbc_comboBox = new GridBagConstraints();
+		gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBox.gridx = 0;
+		gbc_comboBox.gridy = 0;
+		panel.add(comboBox, gbc_comboBox);
 
 		panelCoordenadas = new JPanel();
 		panelCoordenadas.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Coordenadas", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagConstraints gbc_panelCoordenadas = new GridBagConstraints();
 		gbc_panelCoordenadas.fill = GridBagConstraints.BOTH;
-		gbc_panelCoordenadas.insets = new Insets(5, 5, 5, 5);
+		gbc_panelCoordenadas.insets = new Insets(5, 5, 5, 0);
 		gbc_panelCoordenadas.gridx = 0;
-		gbc_panelCoordenadas.gridy = 0;
+		gbc_panelCoordenadas.gridy = 1;
 		panelOpciones.add(panelCoordenadas, gbc_panelCoordenadas);
 		GridBagLayout gbl_panelCoordenadas = new GridBagLayout();
 		gbl_panelCoordenadas.columnWidths = new int[]{39, 30, 24, 0};
@@ -330,9 +397,9 @@ public class Fractales extends JFrame {
 		panelAcciones.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Acciones", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
 		GridBagConstraints gbc_panelAcciones = new GridBagConstraints();
 		gbc_panelAcciones.fill = GridBagConstraints.BOTH;
-		gbc_panelAcciones.insets = new Insets(5, 5, 5, 5);
+		gbc_panelAcciones.insets = new Insets(5, 5, 5, 0);
 		gbc_panelAcciones.gridx = 0;
-		gbc_panelAcciones.gridy = 1;
+		gbc_panelAcciones.gridy = 2;
 		panelOpciones.add(panelAcciones, gbc_panelAcciones);
 		GridBagLayout gbl_panelAcciones = new GridBagLayout();
 		gbl_panelAcciones.columnWidths = new int[]{39, 0};
@@ -386,10 +453,10 @@ public class Fractales extends JFrame {
 		panelProcesamiento = new JPanel();
 		panelProcesamiento.setBorder(new TitledBorder(null, "Procesamiento", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagConstraints gbc_panelProcesamiento = new GridBagConstraints();
-		gbc_panelProcesamiento.insets = new Insets(5, 5, 5, 5);
+		gbc_panelProcesamiento.insets = new Insets(5, 5, 5, 0);
 		gbc_panelProcesamiento.fill = GridBagConstraints.BOTH;
 		gbc_panelProcesamiento.gridx = 0;
-		gbc_panelProcesamiento.gridy = 2;
+		gbc_panelProcesamiento.gridy = 3;
 		panelOpciones.add(panelProcesamiento, gbc_panelProcesamiento);
 		GridBagLayout gbl_panelProcesamiento = new GridBagLayout();
 		gbl_panelProcesamiento.columnWidths = new int[]{39, 24, 0};

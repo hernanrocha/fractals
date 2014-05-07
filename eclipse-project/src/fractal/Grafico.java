@@ -20,6 +20,8 @@ import conjunto.ConjuntoMandelbrot;
 
 public class Grafico {
 
+	private static final int FACTOR = 10;
+	
 	// Variables Screen
 	private int width;
 	private int height;
@@ -158,7 +160,7 @@ public class Grafico {
 		for (int f = 0; f < height; f++){
 			for (int c = 0; c < width; c++){
 				int valor = matriz[f][c];
-				imagen[f * width + c] = coloreo.getColor(valor * 15).getRGB();
+				imagen[f * width + c] = coloreo.getColor(valor * FACTOR).getRGB();
 			}
 		}
 		

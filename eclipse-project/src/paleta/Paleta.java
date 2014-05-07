@@ -13,6 +13,8 @@ public abstract class Paleta {
 	public void setInterpolar(boolean interpolar) {
 		this.interpolar = interpolar;
 	}
+	
+	public Paleta(){}
 
 	public Paleta(boolean interpolar) {		
 		this.interpolar = interpolar;
