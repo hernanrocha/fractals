@@ -1,31 +1,26 @@
-package fractal;
-import java.awt.Dimension;
+package conjunto;
+import grafico.Grafico;
+
 import java.awt.Image;
 import java.awt.image.MemoryImageSource;
 import java.io.File;
 import java.util.concurrent.Semaphore;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-
 import paleta.Paleta;
 import paleta.PaletaArchivo;
-
 import swing.Fractales;
 import thread.GraficadorSegmento;
 import basic.Complejo;
-import conjunto.Conjunto;
-import conjunto.ConjuntoMandelbrot;
 
 
-public class Grafico {
+public class GraficoConjuntos extends Grafico{
 
 	private static final int FACTOR = 10;
 	
 	// Variables Screen
 	private int width;
 	private int height;
-	public int[][] matriz, matrizNueva;
+	public int[][] matrizVal, matrizNueva;
 	
 	// Variables Grafico
 	private double xMin;
@@ -46,7 +41,7 @@ public class Grafico {
 	public int fDelta, cDelta;
 //	public boolean[][] matrizRecalc;
 	
-	public Grafico(Fractales frame, Conjunto conjunto, Paleta coloreo){
+	public GraficoConjuntos(Fractales frame, Conjunto conjunto, Paleta coloreo){
 		this.frame = frame;
 		this.conjunto = conjunto;
 		this.coloreo = coloreo;
@@ -54,7 +49,7 @@ public class Grafico {
 		calcularLimites();
 	}
 	
-	public Grafico(Fractales frame, Complejo min, Complejo max, int width, int height){
+	public GraficoConjuntos(Fractales frame, Complejo min, Complejo max, int width, int height){
 		xMin = min.getReal();
 		xMax = max.getReal();
 		yMin = min.getImag();
@@ -62,7 +57,7 @@ public class Grafico {
 		
 		this.width = width;
 		this.height = height;
-		matriz = new int[height][width];
+		matrizVal = new int[height][width];
 		
 		// TODO Arreglar
 		this.frame = frame;
@@ -99,6 +94,7 @@ public class Grafico {
 
 	}
 
+	@Override
 	public void calcular(){
 		
 		long begin = System.currentTimeMillis();
@@ -136,7 +132,7 @@ public class Grafico {
 		try {
 			// Esperar a que todos los threads terminen
 			s.acquire(threads);
-			matriz = matrizNueva.clone(); // DEBUG
+			matrizVal = matrizNueva.clone(); // DEBUG
 			moviendo = false; // DEBUG
 			long end = System.currentTimeMillis();
 			tiempoProcesamiento = end - begin;
@@ -154,19 +150,20 @@ public class Grafico {
 //		}
 	}
 	
-	public void graficar(JLabel lblImagen){
+	@Override
+	public Image generarImagen(){
 		int[] imagen = new int[width*height];
 		
 		for (int f = 0; f < height; f++){
 			for (int c = 0; c < width; c++){
-				int valor = matriz[f][c];
+				int valor = matrizVal[f][c];
 				imagen[f * width + c] = coloreo.getColor(valor * FACTOR).getRGB();
 			}
 		}
 		
 	    Image imagenNueva = frame.createImage(new MemoryImageSource(width, height, imagen, 0, width ));
-	    lblImagen.setIcon(new ImageIcon(imagenNueva));
-	    lblImagen.setMaximumSize(new Dimension(width, height));
+	    
+	    return imagenNueva;
 	}
 
 	public void mover(int f, int c) {

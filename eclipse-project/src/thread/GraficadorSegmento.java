@@ -3,21 +3,19 @@ package thread;
 import java.util.concurrent.Semaphore;
 
 import conjunto.Conjunto;
-
+import conjunto.GraficoConjuntos;
 import basic.Complejo;
-
-import fractal.Grafico;
 
 public class GraficadorSegmento implements Runnable {
 	
 	private int min, max;
 	private Semaphore s;
-	private Grafico g;
+	private GraficoConjuntos g;
 	private Conjunto conjunto;
 	private int width, height;
 	private double xMin, xMax, yMin, yMax;
 
-	public GraficadorSegmento(int min, int max, Grafico g, Semaphore s) {
+	public GraficadorSegmento(int min, int max, GraficoConjuntos g, Semaphore s) {
 		super();
 		this.min = min;
 		this.max = max;
@@ -41,7 +39,7 @@ public class GraficadorSegmento implements Runnable {
 				
 				if (g.moviendo && g.aceleracionMover && f-g.fDelta >= 0 && f-g.fDelta < height && c-g.cDelta >= 0 && c-g.cDelta < width){
 
-					g.matrizNueva[f][c] = g.matriz[f-g.fDelta][c-g.cDelta];
+					g.matrizNueva[f][c] = g.matrizVal[f-g.fDelta][c-g.cDelta];
 					
 				}else{
 				

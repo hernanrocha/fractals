@@ -4,27 +4,30 @@ import basic.Complejo;
 
 public class ConjuntoMandelbrot extends Conjunto{
 
+	public static final ConjuntoMandelbrot CUADRATICO = new ConjuntoMandelbrot(2);
+	public static final ConjuntoMandelbrot CUBICO = new ConjuntoMandelbrot(3);
+	public static final ConjuntoMandelbrot ORDEN_5 = new ConjuntoMandelbrot(5);
+	public static final ConjuntoMandelbrot ORDEN_10 = new ConjuntoMandelbrot(10);
+	public static final ConjuntoMandelbrot ORDEN_20 = new ConjuntoMandelbrot(20);
+	
 	private int exp;
 
 	public ConjuntoMandelbrot(int exp){
+		super();
+		
 		this.exp = exp;
 	}
 	
 	@Override
-	public int iterar(Complejo c){
-		
-		Complejo Zn = new Complejo();
-		
-		for(int i = 0; i < Conjunto.MAX_ITERACIONES; i++){
-			Zn = Complejo.suma(Complejo.potencia(Zn, exp), c);			
-			double modulo = Zn.modulo();
-			
-			if (modulo > Conjunto.RADIO_ESCAPE){
-				return i;
-			}
-		}
-		
-		return Conjunto.MAX_ITERACIONES;
+	public Complejo getFirst(Complejo c){
+		// Zo = 0 + 0i
+		return new Complejo();
+	}
+
+	@Override
+	public Complejo getNext(Complejo Zn, Complejo c){
+		// Z(n+1) = Zn ^ exp + c
+		return Complejo.suma(Complejo.potencia(Zn, exp), c);
 	}
 	
 }

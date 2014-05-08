@@ -2,15 +2,20 @@ package swing;
 //import Grafico;
 //import ManejadorClicsRaton;
 
+import grafico.Grafico;
+
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.NumberFormat;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
@@ -28,8 +33,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import afin.GraficoAfines;
 import basic.Complejo;
-import fractal.Grafico;
 
 import javax.swing.JComboBox;
 
@@ -37,6 +42,7 @@ import conjunto.ConjuntoJulia;
 import conjunto.ConjuntoMandelbrot;
 import conjunto.Funcion;
 import conjunto.FuncionPolinomica;
+import conjunto.GraficoConjuntos;
 
 /**
  * 
@@ -62,7 +68,7 @@ public class Fractales extends JFrame {
 	private JSpinner spinYMin;
 	private JSpinner spinYMax;
 	private JButton btnGraficar;
-	private Grafico g;
+	private GraficoConjuntos g;
 
 	private MouseHandler mouseHandler;
 	private JLabel lblRangoEjeX;
@@ -82,6 +88,10 @@ public class Fractales extends JFrame {
 	private JCheckBox chckbxAceleracinDeReclculo;
 	private JPanel panel;
 	private JComboBox comboBox;
+
+	private int width;
+
+	private int height;
 
 	/**
 	 * Launch the application.
@@ -149,13 +159,20 @@ public class Fractales extends JFrame {
 		initFractalComplejos();
 		
 		agregarPanelOpciones();
-		graficar();
+//		graficar();
 		
+		GraficoAfines.cargarAfines();
+		GraficoAfines.SIERPINSKI.setFrame(this);
 		
-//		Afines.cargarAfines();
-//		HelechoBransley helecho = new HelechoBransley(this);
-//		helecho.calcular();
-//		helecho.graficar(lblImagen);
+		g.setConjunto(ConjuntoMandelbrot.CUADRATICO);
+		
+//		Grafico grafico = GraficoAfines.SIERPINSKI;
+		Grafico grafico = g;
+		
+		grafico.calcular();
+		Image im = grafico.generarImagen();
+		ImageIcon icon = new ImageIcon(im);
+	    lblImagen.setIcon(icon);
 
 
 		//		Complejo c = new Complejo(0.3, 0.5);
@@ -204,51 +221,23 @@ public class Fractales extends JFrame {
 		double yMin = -2;
 		double yMax = 2;
 
-		int width = 600;
-		int height = 598;
+		width = 600;
+		height = 598;
 
-		g = new Grafico(this, new Complejo(xMin, yMin), new Complejo(xMax, yMax), width, height);
-
+		g = new GraficoConjuntos(this, new Complejo(xMin, yMin), new Complejo(xMax, yMax), width, height);		
+		g.setConjunto(ConjuntoJulia.CONEJO_DOUADY);
 		g.setThreads(10);
+		
 //		g.setAceleracionMover(true);
 		
-		// Conjuntos de Julia
-		// Jc = Conjunto de Julia de parámetro c
-		// Para todo z en el plano Complejo, iterar:
-		//    Z(0) = z
-		//    Z(n+1) = Z(n) ^ 2 + c
-		
-//		Funcion f = new FuncionPolinomica(2, new Complejo(0.279, 0));
-//		Funcion f = new FuncionPolinomica(3, new Complejo(0.4, 0));
-//		Funcion f = new FuncionPolinomica(3, new Complejo(-1, 0));
-//		Funcion f = new FuncionPolinomica(3, new Complejo(0.3, 0.6));
-		
-		// Sitio: http://www.mat.iesvillalbahervas.org/index.php?option=com_content&view=article&id=120:3conjuntos-de-julia-y-mandelbrot&catid=60:fractales&Itemid=134
-//		Funcion f = new FuncionPolinomica(2, new Complejo(0, 0.8));
-//		Funcion f = new FuncionPolinomica(2, new Complejo(-0.8, -0.25));
-//		Funcion f = new FuncionPolinomica(2, new Complejo(-0.8, 0));
-		
-//		Funcion f = new FuncionPolinomica(2, new Complejo(0, 1)); // Fractal Dendrita
-//		Funcion f = new FuncionPolinomica(2, new Complejo(-0.123, 0.745)); // Conejo de Douady
-		 // Fractal de San Marco
-		Funcion f = new FuncionPolinomica(2, new Complejo(-0.391, 0.587)); // Disco de Siegel
-		
-		// Otras funciones
-//		·        z(n+1) = z’(n)^2 + c 
-//				·        z(n+1) = z’(n)^3 + c 
-//				·        z(n+1) = z’(n)^4 + c 
-		// z(n+1) = sen (z/c) ; z(0) = c.
-		
-		// Mas Informacion
-//		http://es.wikipedia.org/wiki/Fractal
-		
+//
 //		int grado = 2;
 //		double real = -0.391;
 //		double imag = 0.587;
 //		
 //		Complejo c = new Complejo(real, imag);
 //		Funcion f = new FuncionPolinomica(grado, c);
-		g.setConjunto(new ConjuntoJulia(f));
+//		g.setConjunto(new ConjuntoJulia(f));
 		
 //		Conjuntos conexos (conjuntos de Fatou) y Conjuntos no conexos (conjuntos de Cantor).
 		
@@ -256,8 +245,6 @@ public class Fractales extends JFrame {
 		
 //		int exp = 2;
 //		g.setConjunto(new ConjuntoMandelbrot(exp));
-		
-
 
 	}
 
@@ -561,7 +548,9 @@ public class Fractales extends JFrame {
 
 	private void actualizarInterfaz() {
 		// Renderizar imagen
-		g.graficar(lblImagen);
+		Image im = g.generarImagen();
+	    lblImagen.setIcon(new ImageIcon(im));
+	    lblImagen.setMaximumSize(new Dimension(width, height));
 
 		// Rango de ejes
 		spinXMin.setValue(g.getxMin());
