@@ -6,22 +6,24 @@ import java.awt.event.MouseWheelEvent;
 import javax.swing.SwingUtilities;
 
 
+
+
+
 import basic.Punto;
 
 
 public class MouseHandler extends MouseAdapter {
 	private static final int REFRESH_PERIOD = 20;
+	private static final int MIN_PIXELS = 2;
+
+	private Fractales frame;
+	
 	private int xPos;
 	private int yPos;
-	private Fractales frame;
 	private long oldTime = 0;
 	
-	private boolean mover, zoom;
-	private static final int MIN_PIXELS = 1;
+	private boolean mover, moverInteractivo, zoom;
 
-	/**
-	 * @param Fractales
-	 */
 	public MouseHandler(Fractales frame) {
 		this.frame = frame;
 	}
@@ -32,7 +34,7 @@ public class MouseHandler extends MouseAdapter {
 		System.out.println(evento.getScrollType());
 	}
 	
-	// manejar evento de clic del ratón y determinar cuál botón se oprimió
+	// Manejar evento de clic del ratón y determinar cuál botón se oprimió
 	public void mouseClicked(MouseEvent evento){
 		xPos = evento.getX();
 		yPos = evento.getY();
@@ -67,6 +69,7 @@ public class MouseHandler extends MouseAdapter {
 	
 	@Override
 	public void mousePressed(MouseEvent evento){
+		// Actualizar posicion
 		xPos = evento.getX();
 		yPos = evento.getY();
 		
@@ -75,30 +78,34 @@ public class MouseHandler extends MouseAdapter {
 	
 	@Override
 	public void mouseReleased(MouseEvent evento){
+		int xPosRelease = evento.getX();
+		int yPosRelease = evento.getY();
+		frame.getImagen().setParametros(0, 0, 0, 0, PanelImagen.NONE);
+		
+		System.out.println("Soltado " + xPosRelease + " - " + yPosRelease);
+		
 		if (zoom){
-			int xPosRelease = evento.getX();
-			int yPosRelease = evento.getY();
 			
 			if ( (Math.abs(xPos - xPosRelease) < MIN_PIXELS ) || (Math.abs(yPos - yPosRelease) < MIN_PIXELS) ){
 				return;
 			}
 			
-			System.out.println("Soltado " + xPos + " - " + yPos);
+			// Calcular rango de eje
+			int xMin = Math.min(xPos, xPosRelease);
+			int xMax = Math.max(xPos, xPosRelease);
+			int yMin = Math.min(yPos, yPosRelease);
+			int yMax = Math.max(yPos, yPosRelease);
 			
-			if(xPosRelease > xPos){
-				if (yPosRelease > yPos){
-					frame.zoom(yPos, yPosRelease, xPos, xPosRelease);
-				}else{
-					frame.zoom(yPosRelease, yPos, xPos, xPosRelease);
-				}
-			}else{
-				if (yPosRelease > yPos){
-					frame.zoom(yPos, yPosRelease, xPosRelease, xPos);
-				}else{
-					frame.zoom(yPosRelease, yPos, xPosRelease, xPos);
-				}
-			}
+			frame.zoom(yMin, yMax, xMin, xMax);
+		
+		}else if(mover && !moverInteractivo){
+			// Calcular movimiento
+			int difX = evento.getX() - xPos;
+			int difY = evento.getY() - yPos;
 			
+			// Realizar movimiento
+			System.out.println("Mover: " + difX + " - " + difY);
+			frame.mover(difY, difX);
 		}
 	}
 	
@@ -107,17 +114,31 @@ public class MouseHandler extends MouseAdapter {
 		
 		long newTime = System.currentTimeMillis();
 		
-		if(mover && newTime - oldTime  > REFRESH_PERIOD){
+		if(mover && moverInteractivo && newTime - oldTime  > REFRESH_PERIOD){
 			oldTime = newTime;
 			
+			// Calcular movimiento
 			int difX = evento.getX() - xPos;
 			int difY = evento.getY() - yPos;
 			
-			frame.mover(difY, difX);
-			System.out.println("Movido: " + difX + " - " + difY);
-			
+			// Calcular nueva posicion
 			xPos = evento.getX();
 			yPos = evento.getY();
+			
+			// Realizar movimiento
+			System.out.println("Mover interactivo: " + difX + " - " + difY);
+			frame.mover(difY, difX);
+			
+		}else if (mover){
+			// Actualizar linea
+			frame.getImagen().setParametros(xPos, yPos, evento.getX(), evento.getY(), PanelImagen.MOVER);
+		}else if (zoom){
+			// Actualizar rectangulo
+			int x = Math.min(xPos, evento.getX());
+			int y = Math.min(yPos, evento.getY());
+			int w = Math.abs(xPos - evento.getX());
+			int h = Math.abs(yPos - evento.getY());
+			frame.getImagen().setParametros(x, y, w, h, PanelImagen.ZOOM);
 		}
 		
 	}
@@ -126,19 +147,18 @@ public class MouseHandler extends MouseAdapter {
 	public void mouseMoved(MouseEvent evento){
 		frame.setPosicionActual(evento.getY(), evento.getX());
 	}
-
-//	public boolean isMover() {
-//		return mover;
-//	}
+	
+	// Setters
 
 	public void setMover(boolean mover) {
 		System.out.println("Set mover " + mover);
 		this.mover = mover;
 	}
-
-//	public boolean isZoom() {
-//		return zoom;
-//	}
+	
+	public void setMoverInteractivo(boolean moverInteractivo) {
+		System.out.println("Set mover interactivo " + moverInteractivo);
+		this.moverInteractivo = moverInteractivo;
+	}
 
 	public void setZoom(boolean zoom) {
 		System.out.println("Set zoom " + zoom);

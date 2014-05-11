@@ -5,44 +5,50 @@ package afin;
 
 import grafico.Grafico;
 
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.Vector;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.image.MemoryImageSource;
 
-import swing.Fractales;
-
 public class GraficoAfines extends Grafico{
-	private Vector<Afin> v = new Vector<Afin>();
-	private Vector<Double> probAcum = new Vector<Double>();
-
-	private int indice; 
-	private double x = 0;
-	private double y = 0;
 	
-	public static GraficoAfines HELECHO;
+	public static GraficoAfines HELECHO = new GraficoAfines(
+			new Afin[]{new Afin( 0   , 0	, 0	  , 0.20, 0,  10),
+			           new Afin( 0.85, 0.04,-0.04, 0.85, 0, 100),
+			           new Afin( 0.20,-0.26, 0.23, 0.22, 0, 100),
+			           new Afin(-0.15, 0.30, 0.26, 0.24, 0,  28)},
+			new Double[]{0.01, 0.85, 0.07, 0.07}
+	);
+	
+	public static GraficoAfines SIERPINSKI = new GraficoAfines(
+			new Afin[]{new Afin(0.50, 0, 0, 0.50,  150,  10),
+					   new Afin(0.50, 0, 0, 0.50,    1, 300),
+					   new Afin(0.50, 0, 0, 0.50, -150,  10)},
+		    new Double[]{0.33, 0.33, 0.34}
+	);
+	
 	public static GraficoAfines ARCE;
 	public static GraficoAfines ARBOL;
 	public static GraficoAfines ARBOL_2;
-	public static GraficoAfines SIERPINSKI;
 	
-	private Fractales frame;
-	
-	private Point punto;
-	private int width = 1000;
-	private int height = 700;
-	private int[] matriz = new int[width * height];
-	private static int PROFUNDIDAD = 3;
+	private Vector<Afin> v = new Vector<Afin>();
+	private Vector<Double> probAcum = new Vector<Double>();
 	private Vector<Integer> indices = new Vector<Integer>();
 
+	private int indice;
+	private Point punto;
+
+	private int[] matriz = new int[width * height];
+	
+	private HashMap<Point, Integer> matrizVal = new HashMap<Point, Integer>();
+	
+	private static int PROFUNDIDAD = 3;
+
 	public static void cargarAfines(){
-		// Helecho
-		HELECHO = new GraficoAfines();
-		HELECHO.agregarAfin(new Afin( 0   , 0	, 0	  , 0.20, 0,  10), 0.01);
-		HELECHO.agregarAfin(new Afin( 0.85, 0.04,-0.04, 0.85, 0, 100), 0.85);
-		HELECHO.agregarAfin(new Afin( 0.20,-0.26, 0.23, 0.22, 0, 100), 0.07);
-		HELECHO.agregarAfin(new Afin(-0.15, 0.30, 0.26, 0.24, 0,  28), 0.07);
 		
 		ARCE = new GraficoAfines();
 		ARCE.agregarAfin(new Afin(0.14	,0.1	,0		,0.51	,-0.08 	,-1.31)	,0.10);
@@ -62,26 +68,20 @@ public class GraficoAfines extends Grafico{
 		ARBOL_2.agregarAfin(new Afin(-0.058,-0.070	,0.453	,-0.111 ,0.5976 	,0.0969)	,0.2);
 		ARBOL_2.agregarAfin(new Afin(-0.035, 0.070	,-0.469 ,-0.022 ,0.4431 	,0.5069)	,0.2);
 		ARBOL_2.agregarAfin(new Afin(-0.637, 0.0  	,0.0  	,0.501	,0.8562 	,0.2513)	,0.2);
-
-		SIERPINSKI = new GraficoAfines();
-		SIERPINSKI.agregarAfin(new Afin(0.50, 0, 0, 0.50,  150,  10), 0.33);
-		SIERPINSKI.agregarAfin(new Afin(0.50, 0, 0, 0.50,    1, 300), 0.33);
-		SIERPINSKI.agregarAfin(new Afin(0.50, 0, 0, 0.50, -150,  10), 0.34);
+	}
+	
+	public GraficoAfines(Afin[] afines, Double[] probabilidades){
+		v.add(null);
+		probAcum.add(0.0);
+		
+		for(int i = 0; i < afines.length; i++){
+			agregarAfin(afines[i], probabilidades[i]);
+		}
 	}
 	
 	public GraficoAfines(){
 		v.add(null);
 		probAcum.add(0.0);	
-	}
-	
-	public GraficoAfines(Fractales frame){
-		v.add(null);
-		probAcum.add(0.0);
-		this.frame = frame;
-	}
-	
-	public void setFrame(Fractales frame) {
-		this.frame = frame;
 	}
 
 	public void agregarAfin(Afin a, Double prob) {
@@ -101,50 +101,16 @@ public class GraficoAfines extends Grafico{
 		return -1;
 	}
 
-	public void iterar() {
-		double rand = Math.random();		
-		double prob = probAcum.elementAt(0);
-		int i = 0;
-
-		while (prob < rand && i < probAcum.size()) {
-			i++;
-			prob += probAcum.elementAt(i);
-		}
-		
-		if (i == probAcum.size()){
-			i--;
-		}
-		
-		indice = i;
-		Afin a = v.elementAt(i);
-		a.aplica(x,y);
-		x = a.getX();
-		y = a.getY();
-	}
-
-	public double getX() {
-		return x;
-	}
-	
-	public double getY() {
-		return y;
-	}
-
-	public int getIndice() {
-		return indice;
-	}
-
-	public void factor(double k) {
-		for (Afin a : v)
-			a.setFactor(k);
-	}
-	
-	
-	// --------------------------------------------------------------------------------------
+//	public void factor(double k) {
+//		for (Afin a : v)
+//			a.setFactor(k);
+//	}
 	
 	// Calcular el fractal por IFS
 	@Override
 	public void calcular(){
+		
+		System.out.println("Calculando");
 		
 		// Punto inicial
 		punto = new Point(0, 0);
@@ -166,14 +132,11 @@ public class GraficoAfines extends Grafico{
 		 // Agregar indice a la lista
 		indices.add(indice);
 		
-		// Calcular el valor del pixel
-		int r = 0, g = 0;		
+		// Calcular valor
 		if (indices.size() > PROFUNDIDAD){
-			r = (indices.get(indices.size() - PROFUNDIDAD) - 1) * 80;
+			int val = (indices.get(indices.size() - PROFUNDIDAD) - 1);
+			matrizVal.put(punto, val);
 		}
-		
-		// Setear el valor del pixel
-		setPixel(punto.x + 400, punto.y, new Color(r, g, 128).getRGB());
 	}
 	
 	// Colorear un pixel en la matriz
@@ -189,8 +152,29 @@ public class GraficoAfines extends Grafico{
 	// Generar imagen a partir de la matriz almacenada
 	@Override
 	public Image generarImagen(){
+		
+		int[] imagen = new int[width*height];
+		
+		Set<Entry<Point, Integer>> values = matrizVal.entrySet();
+		for (Entry<Point, Integer> entrada : values){
+			int valor = entrada.getValue();
+			int f = getYtoF(entrada.getKey().getY());
+			int c = getXtoC(entrada.getKey().getX());
+			if (c>=0 && f>=0 && c<width && f<height){
+				imagen[f * width + c] = new Color(valor * 80, 50, 0).getRGB() ;
+			}
+		}
+		
+//		for (int f = 0; f < height; f++){
+//			for (int c = 0; c < width; c++){
+//				int valor = matrizVal[f][c];
+//				imagen[f * width + c] = coloreo.getColor(valor * FACTOR).getRGB();
+//			}
+//		}
+//		
+//		
 	    
-	    Image imagenNueva = frame.createImage(new MemoryImageSource(width, height, matriz, 0, width ));
+	    Image imagenNueva = frame.createImage(new MemoryImageSource(width, height, imagen, 0, width ));
 	    
 	    return imagenNueva;
 	
