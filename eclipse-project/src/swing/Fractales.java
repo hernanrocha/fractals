@@ -4,6 +4,7 @@ import filtro.FiltroArchivoPNG;
 import grafico.Grafico;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -51,6 +52,7 @@ import afin.GraficoAfines;
 import conjunto.ConjuntoJulia;
 import conjunto.ConjuntoMandelbrot;
 import conjunto.GraficoConjuntos;
+import java.awt.Toolkit;
 
 public class Fractales extends JFrame {
 
@@ -145,6 +147,7 @@ public class Fractales extends JFrame {
 	 * Create the frame.
 	 */
 	public Fractales() {
+		setIconImage(Toolkit.getDefaultToolkit().getImage(Fractales.class.getResource("/icon/icon.png")));
 		// Iniciar Ventana
 		setTitle("Fractal Viewer 2.0");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -497,6 +500,7 @@ public class Fractales extends JFrame {
 		    	}
 		    	mouseHandler.setMover(e.getStateChange() == ItemEvent.SELECTED);
 		    	chckbxMovimInteractivo.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
+		    	actualizarCursor();
 		    }
 		});
 		
@@ -505,10 +509,9 @@ public class Fractales extends JFrame {
 		chckbxMovimInteractivo.addItemListener(new ItemListener() {
 		    public void itemStateChanged(ItemEvent e) {
 		    	mouseHandler.setMoverInteractivo(e.getStateChange() == ItemEvent.SELECTED);
+		    	actualizarCursor();
 		    }
 		});
-		chckbxMovimInteractivo.setSelected(true);
-		chckbxMovimInteractivo.setEnabled(false);
 		GridBagConstraints gbc_chckbxMovimientointeractivo = new GridBagConstraints();
 		gbc_chckbxMovimientointeractivo.anchor = GridBagConstraints.WEST;
 		gbc_chckbxMovimientointeractivo.insets = new Insets(0, 40, 5, 0);
@@ -525,9 +528,9 @@ public class Fractales extends JFrame {
 		    		chckbxMover.setSelected(false);
 		    	}
 		    	mouseHandler.setZoom(e.getStateChange() == ItemEvent.SELECTED);
+		    	actualizarCursor();
 		    }
 		});
-		chckbxZoom.setSelected(true);
 		GridBagConstraints gbc_chckbxZoom = new GridBagConstraints();
 		gbc_chckbxZoom.anchor = GridBagConstraints.WEST;
 		gbc_chckbxZoom.insets = new Insets(5, 15, 5, 0);
@@ -541,6 +544,30 @@ public class Fractales extends JFrame {
 		gbc_lblPuntoactual.gridx = 0;
 		gbc_lblPuntoactual.gridy = 3;
 		panelAcciones.add(lblPuntoactual, gbc_lblPuntoactual);
+		
+		// Valores iniciales
+		chckbxMovimInteractivo.setSelected(true);
+		chckbxMovimInteractivo.setEnabled(false);
+		chckbxZoom.setSelected(true);
+		
+	}
+
+	protected void actualizarCursor() {
+		if(lblImagen == null){
+			return;
+		}
+		
+		if (chckbxMover.isSelected()){
+			if (chckbxMovimInteractivo.isSelected()){
+				lblImagen.setCursor(new Cursor(Cursor.MOVE_CURSOR));
+			}else{
+				lblImagen.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));				
+			}
+		}else if (chckbxZoom.isSelected()){
+			lblImagen.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
+		}else{
+			lblImagen.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+		}
 		
 	}
 
