@@ -1,18 +1,10 @@
 package swing;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-
-import javax.swing.SwingUtilities;
-
-
-
-
-
-import basic.Punto;
-
 
 public class MouseHandler extends MouseAdapter {
+	
 	private static final int REFRESH_PERIOD = 20;
 	private static final int MIN_PIXELS = 2;
 
@@ -27,62 +19,32 @@ public class MouseHandler extends MouseAdapter {
 	public MouseHandler(Fractales frame) {
 		this.frame = frame;
 	}
-
-	public void mouseWheelMoved(MouseWheelEvent evento){
-		System.out.println(evento.getScrollAmount());
-		System.out.println(evento.getPreciseWheelRotation());
-		System.out.println(evento.getScrollType());
-	}
-	
-	// Manejar evento de clic del ratón y determinar cuál botón se oprimió
-	public void mouseClicked(MouseEvent evento){
-		xPos = evento.getX();
-		yPos = evento.getY();
-
-		String titulo = "Se hizo clic " + evento.getClickCount() + " Veces";
-
-		if ( evento.isMetaDown() ){
-			// botón derecho del ratón
-			Runnable addIt = new Runnable() {
-				public void run() {
-//					frame.zoomOut(new Punto(xPos, yPos));
-				}
-			};
-			SwingUtilities.invokeLater(addIt);
-			titulo += " con el botón derecho del ratón";
-		}else if ( evento.isAltDown() ){
-			// botón de en medio del ratón
-			titulo += " con el botón central del ratón";
-		}else{  // botón izquierdo del ratón
-			Runnable addIt = new Runnable() {
-				public void run() {
-//					frame.zoomIn(new Punto(xPos, yPos));
-				}
-			};
-			SwingUtilities.invokeLater(addIt);
-			titulo += " con el botón izquierdo del ratón";
-		}
-		
-//		System.out.println(titulo);
-//		System.out.println(xPos + " - " + yPos);
-	}
 	
 	@Override
 	public void mousePressed(MouseEvent evento){
-		// Actualizar posicion
-		xPos = evento.getX();
-		yPos = evento.getY();
+		if (!frame.isCargado()){
+			return;
+		}
 		
-		System.out.println("Presionado " + xPos + " - " + yPos);
+		// Actualizar posicion
+		xPos = evento.getX() - frame.getImagen().getMinX();
+		yPos = evento.getY() - frame.getImagen().getMinY();
+		
+//		System.out.println("Presionado " + xPos + " - " + yPos);
 	}
 	
 	@Override
 	public void mouseReleased(MouseEvent evento){
-		int xPosRelease = evento.getX();
-		int yPosRelease = evento.getY();
+		if (!frame.isCargado()){
+			return;
+		}
+		
+		int xPosRelease = evento.getX() - frame.getImagen().getMinX();
+		int yPosRelease = evento.getY() - frame.getImagen().getMinY();
+		
 		frame.getImagen().setParametros(0, 0, 0, 0, PanelImagen.NONE);
 		
-		System.out.println("Soltado " + xPosRelease + " - " + yPosRelease);
+//		System.out.println("Soltado " + xPosRelease + " - " + yPosRelease);
 		
 		if (zoom){
 			
@@ -100,17 +62,23 @@ public class MouseHandler extends MouseAdapter {
 		
 		}else if(mover && !moverInteractivo){
 			// Calcular movimiento
-			int difX = evento.getX() - xPos;
-			int difY = evento.getY() - yPos;
+			int difX = xPosRelease - xPos;
+			int difY = yPosRelease - yPos;
 			
 			// Realizar movimiento
-			System.out.println("Mover: " + difX + " - " + difY);
+//			System.out.println("Mover: " + difX + " - " + difY);
 			frame.mover(difY, difX);
 		}
 	}
 	
 	@Override
 	public void mouseDragged(MouseEvent evento){
+		if (!frame.isCargado()){
+			return;
+		}
+		
+		int xDrag = evento.getX() - frame.getImagen().getMinX();
+		int yDrag = evento.getY() - frame.getImagen().getMinY();
 		
 		long newTime = System.currentTimeMillis();
 		
@@ -118,26 +86,26 @@ public class MouseHandler extends MouseAdapter {
 			oldTime = newTime;
 			
 			// Calcular movimiento
-			int difX = evento.getX() - xPos;
-			int difY = evento.getY() - yPos;
+			int difX = xDrag - xPos;
+			int difY = yDrag - yPos;
 			
 			// Calcular nueva posicion
-			xPos = evento.getX();
-			yPos = evento.getY();
+			xPos = xDrag;
+			yPos = yDrag;
 			
 			// Realizar movimiento
-			System.out.println("Mover interactivo: " + difX + " - " + difY);
+//			System.out.println("Mover interactivo: " + difX + " - " + difY);
 			frame.mover(difY, difX);
 			
 		}else if (mover){
 			// Actualizar linea
-			frame.getImagen().setParametros(xPos, yPos, evento.getX(), evento.getY(), PanelImagen.MOVER);
+			frame.getImagen().setParametros(xPos, yPos, xDrag, yDrag, PanelImagen.MOVER);
 		}else if (zoom){
 			// Actualizar rectangulo
-			int x = Math.min(xPos, evento.getX());
-			int y = Math.min(yPos, evento.getY());
-			int w = Math.abs(xPos - evento.getX());
-			int h = Math.abs(yPos - evento.getY());
+			int x = Math.min(xPos, xDrag);
+			int y = Math.min(yPos, yDrag);
+			int w = Math.abs(xPos - xDrag);
+			int h = Math.abs(yPos - yDrag);
 			frame.getImagen().setParametros(x, y, w, h, PanelImagen.ZOOM);
 		}
 		
@@ -145,23 +113,25 @@ public class MouseHandler extends MouseAdapter {
 	
 	@Override
 	public void mouseMoved(MouseEvent evento){
-		frame.setPosicionActual(evento.getY(), evento.getX());
+		if (!frame.isCargado()){
+			return;
+		}
+		
+		frame.setPosicionActual(evento.getY() - frame.getImagen().getMinY(), evento.getX() - frame.getImagen().getMinX());
+
 	}
 	
 	// Setters
 
 	public void setMover(boolean mover) {
-		System.out.println("Set mover " + mover);
 		this.mover = mover;
 	}
 	
 	public void setMoverInteractivo(boolean moverInteractivo) {
-		System.out.println("Set mover interactivo " + moverInteractivo);
 		this.moverInteractivo = moverInteractivo;
 	}
 
 	public void setZoom(boolean zoom) {
-		System.out.println("Set zoom " + zoom);
 		this.zoom = zoom;
 	}
 	

@@ -2,17 +2,10 @@ package conjunto;
 
 import basic.Complejo;
 
-/**
- * @author hernan
- *
- */
 public abstract class Conjunto {
 
-	public static final int MAX_ITERACIONES = 90;
-	public static final double RADIO_ESCAPE = 2;	
-
-	public abstract Complejo getFirst(Complejo c);
-	public abstract Complejo getNext(Complejo Zn, Complejo c);
+	public static final int MAX_ITERACIONES = 100;
+	public static final double RADIO_ESCAPE = 2;
 	
 	public int iterar(Complejo c){
 		Complejo Zn = getFirst(c);
@@ -29,5 +22,8 @@ public abstract class Conjunto {
 
 	}
 
+	public abstract Complejo getFirst(Complejo c);
+	
+	public abstract Complejo getNext(Complejo Zn, Complejo c);
 	
 }

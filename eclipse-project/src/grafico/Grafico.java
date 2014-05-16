@@ -2,6 +2,7 @@ package grafico;
 
 import java.awt.Image;
 
+import paleta.Paleta;
 import swing.Fractales;
 
 public abstract class Grafico {
@@ -9,15 +10,17 @@ public abstract class Grafico {
 	// Variables Screen	
 	protected static Fractales frame;
 	protected static int width;
-	protected static int height;	
+	protected static int height;
+	
+	protected Paleta paleta;
 
 	// Variables Grafico
-	protected double xMin;
-	protected double xMax;
-	protected double yMin;
-	protected double yMax;
+	protected double xMin = 0;
+	protected double xMax = 0;
+	protected double yMin = 0;
+	protected double yMax = 0;
 
-	// Variables de movimiento
+	// Variables de movimiento (PUBLIC para permitir acelerar el procesamiento por parte de los threads)
 	public boolean moviendo;
 	public int fDelta, cDelta;
 
@@ -47,8 +50,8 @@ public abstract class Grafico {
 			yMax = yMin + difYNuevo;
 		}
 		
-		System.out.println("Rango X: (" + xMax + ", " + xMin + ")");
-		System.out.println("Rango Y: (" + yMax + ", " + yMin + ")");
+//		System.out.println("Rango X: (" + xMax + ", " + xMin + ")");
+//		System.out.println("Rango Y: (" + yMax + ", " + yMin + ")");
 
 	}
 	
@@ -110,16 +113,10 @@ public abstract class Grafico {
 	// Convertir valor de Y a numero de fila
 	public int getYtoF(double y){
 		return (int) (height - (y - yMin) * height / (yMax - yMin));
-	}
-
-	// Metodos abstractos
-	
-	public abstract void calcular();
-	
-	public abstract Image generarImagen();
-	
+	}	
 	
 	// Getters
+	
 	public int getWidth() {
 		return width;
 	}
@@ -143,5 +140,15 @@ public abstract class Grafico {
 	public double getyMax() {
 		return yMax;
 	}
+	
+	public Fractales getFrame(){
+		return frame;
+	}
+
+	// Metodos abstractos
+	
+	public abstract void calcular();
+	
+	public abstract Image generarImagen();
 
 }

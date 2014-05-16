@@ -1,82 +1,72 @@
 package conjunto;
+
 import grafico.Grafico;
 
 import java.awt.Image;
 import java.awt.image.MemoryImageSource;
-import java.io.File;
 import java.util.concurrent.Semaphore;
 
-import paleta.Paleta;
-import paleta.PaletaArchivo;
-import swing.Fractales;
+import paleta.PaletaDefault;
 import thread.GraficadorSegmento;
-import basic.Complejo;
 
 
 public class GraficoConjuntos extends Grafico{
 
-	private static final int FACTOR = 10;
+	private static final int FACTOR = 8;
 	
-	// Variables Screen
+	// Variables Screen (PUBLIC para permitir acelerar el procesamiento por parte de los threads)
 	public int[][] matrizVal, matrizNueva;
 	
-	private Conjunto conjunto;
-	private Paleta coloreo;
-	
+	private Conjunto conjunto;	
+	Semaphore calculador = new Semaphore(1);
 	private long tiempoProcesamiento = 0;
 	private int threads = 1;
-	
-	// DEBUG
-	public boolean aceleracionMover = true;
-	
-	public GraficoConjuntos(Conjunto conjunto, Paleta coloreo){
-		this.conjunto = conjunto;
-		this.coloreo = coloreo;
-		
-		calcularLimites();
-	}
+
+	private long begin;
 	
 	public GraficoConjuntos(){
-//		xMin = min.getReal();
-//		xMax = max.getReal();
-//		yMin = min.getImag();
-//		yMax = max.getImag();
 		
+		// Inicializar matriz de Valores
 		matrizVal = new int[height][width];
 		
-		// TODO Arreglar
-		this.coloreo = new PaletaArchivo(new File("paletas/default.pml"), true);
-		this.conjunto = new ConjuntoMandelbrot(2);
+		// Paleta por defecto
+		paleta = new PaletaDefault();
+//		paleta = new PaletaArchivo(new File("paletas/b&w.pml"), true);
 		
-		calcularLimites();
 	}
 	
-
-
 	@Override
 	public void calcular(){
+		try {
+			calculador.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
-		long begin = System.currentTimeMillis();
+		begin = System.currentTimeMillis();
 
-		Semaphore s = new Semaphore(0);
-		
+		final Semaphore s = new Semaphore(0);
 		int div = height / threads;
 		int resto = height % threads;
 		
-		System.out.println(div + " y sobran " + resto);
-		System.out.println("ALERTA: DEBUG Aceleracion Mover");
-		matrizNueva = new int[height][width]; // DEBUG
+		// Generar nueva matriz para guardar el resultado
+		matrizNueva = new int[height][width];
 		
+		// Worker encargado de esperar a que los Threads realicen la iteracion, y luego realizar el calculo de la imagen
+		WorkerConjunto worker = new WorkerConjunto(this, s, threads);
+		worker.execute();
+		
+		// Lanzar Threads
 		int min = 0;
 		for (int i = 0; i < threads; i++){
-			// Calcular salto
+			// Calcular salto (Cantidad de lineas que procesa el thread)
 			int salto = div;
 			if (i < resto){
 				salto++;
 			}
 			
 			// Calcular extremos del segmento
-			int max = min + salto - 1;			
+			int max = min + salto - 1;
 			
 			// Lanzar thread para calcular el segmento
 			GraficadorSegmento seg = new GraficadorSegmento(min, max, this, s);
@@ -85,32 +75,20 @@ public class GraficoConjuntos extends Grafico{
 			// Actualizar minimo
 			min += salto;
 		}
-		
-		
-		try {
-			// Esperar a que todos los threads terminen
-			s.acquire(threads);
-			matrizVal = matrizNueva.clone(); // DEBUG
-			moviendo = false; // DEBUG
-			long end = System.currentTimeMillis();
-			tiempoProcesamiento = end - begin;
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Override
-	public Image generarImagen(){
+	public Image generarImagen(){		
 		int[] imagen = new int[width*height];
 		
 		for (int f = 0; f < height; f++){
 			for (int c = 0; c < width; c++){
 				int valor = matrizVal[f][c];
-				imagen[f * width + c] = coloreo.getColor(valor * FACTOR).getRGB();
+				imagen[f * width + c] = paleta.getColor(valor * FACTOR).getRGB();
 			}
 		}
 		
-	    Image imagenNueva = frame.createImage(new MemoryImageSource(width, height, imagen, 0, width ));
+	    Image imagenNueva = frame.createImage(new MemoryImageSource(width, height, imagen, 0, width));
 	    
 	    return imagenNueva;
 	}
@@ -129,6 +107,18 @@ public class GraficoConjuntos extends Grafico{
 
 	public void setThreads(int threads) {
 		this.threads = threads;		
+	}
+	
+	public void pintar(){		
+		matrizVal = matrizNueva.clone();
+		moviendo = false;
+		frame.resetProgress();
+		long end = System.currentTimeMillis();
+		tiempoProcesamiento = end - begin;
+		
+		frame.actualizarInterfaz();
+		
+		calculador.release();
 	}
 	
 }

@@ -1,5 +1,6 @@
 package swing;
 
+import filtro.FiltroArchivoPNG;
 import grafico.Grafico;
 
 import java.awt.Color;
@@ -10,21 +11,34 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.text.NumberFormat;
 
+import javax.imageio.ImageIO;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
 import javax.swing.JSpinner;
+import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
@@ -34,7 +48,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import afin.GraficoAfines;
-import basic.Complejo;
 import conjunto.ConjuntoJulia;
 import conjunto.ConjuntoMandelbrot;
 import conjunto.GraficoConjuntos;
@@ -42,49 +55,75 @@ import conjunto.GraficoConjuntos;
 public class Fractales extends JFrame {
 
 	private static final long serialVersionUID = 1L;
-
+	
+	// Ventana Principal
 	private JPanel contentPane;
-	private PanelImagen lblImagen;
+	
+	// Menu Bar
 	private JMenuBar menuBar;
 	private JMenu mnArchivo;
 	private JMenu mnAyuda;
+	private JMenuItem mntmGuardar;
+	private JMenuItem mntmSalir;
+	private JSeparator separator;
+	private JMenuItem mntmAcercaDe;
+	
+	// Panel Imagen
+	private PanelImagen lblImagen;
+	
+	// Panel Opciones
 	private JPanel panelOpciones;
 	private JScrollPane scrollPaneOpciones;
-	private JSpinner spinXMin;
-	private JSpinner spinXMax;
-	private JSpinner spinYMin;
-	private JSpinner spinYMax;
-	private JButton btnGraficar;
-
-	private MouseHandler mouseHandler;
+	
+	// Panel Opciones - Panel Fractal
+	private JPanel panelFractal;
+	private JComboBox<String> comboTipo;
+	private JComboBox<String> comboFractal;
+	private DefaultComboBoxModel<String> modeloFractalesComplejos;
+	private DefaultComboBoxModel<String> modeloFractalesAfines;
+	private JSlider sliderProfundidad;
+	private GridBagConstraints gbc_sliderProfundidad;
+	
+	// Panel Opciones - Panel Coordenadas
+	private JPanel panelCoordenadas;
 	private JLabel lblRangoEjeX;
 	private JLabel lblRangoEjeY;
 	private JLabel lblA;
 	private JLabel lblA_1;
-	private JCheckBox chckbxMover;
-	private JCheckBox chckbxZoom;
-	private JCheckBox chckbxThread;
-	private JLabel lblPuntoactual;
-	private JLabel lblTiempoprocesamiento;
-	private JSpinner spinThreads;
-	private JPanel panelProcesamiento;
-	private JPanel panelCoordenadas;
+	private JSpinner spinXMin;
+	private JSpinner spinXMax;
+	private JSpinner spinYMin;
+	private JSpinner spinYMax;
+	private JPanel panel;
+	private JButton btnGraficar;
+	private JButton btnRestablecer;
+	
+	// Panel Opciones - Panel Acciones
 	private JPanel panelAcciones;
+	private JCheckBox chckbxMover;
+	private JCheckBox chckbxMovimInteractivo;
+	private JCheckBox chckbxZoom;
+	private JLabel lblPuntoactual;
+	
+	// Panel Opciones - Panel Procesamiento
+	private JPanel panelProcesamiento;
+	private JCheckBox chckbxAnimarTransicion;
 	private JLabel lblThreads;
-	private JCheckBox chckbxAceleracinDeReclculo;
-	private JPanel panelGrafico;
-	private JComboBox comboFractal;
-
-	private int width;
-
-	private int height;
-
+	private JSpinner spinThreads;
+	private JCheckBox chckbxThread;
+	private JProgressBar progressCalculo;
+	private JLabel lblTiempoprocesamiento;
+	
+	// Variables
+	private Grafico grafico;
 	private GraficoConjuntos gConjuntos;
 	private GraficoAfines gAfines;
-	private Grafico grafico;
+	private MouseHandler mouseHandler;
 	
-	private JCheckBox chckbxMovimInteractivo;
-	private JCheckBox chckbxAnimarTransicion;
+	private int filasProcesadas = 0;
+	private boolean cargado;
+	private int width = 600;
+	private int height = 600;
 
 	/**
 	 * Launch the application.
@@ -106,54 +145,23 @@ public class Fractales extends JFrame {
 	 * Create the frame.
 	 */
 	public Fractales() {
-		setTitle("Fractales");
-
+		// Iniciar Ventana
+		setTitle("Fractal Viewer 2.0");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(50, 20, 875, 675);
+		setBounds(50, 10, 900, 710);
 
+		// Iniciar Paneles
 		initMenu();
 		initPanelImagen();
 		initPanelOpciones();
-
-		width = 600;
-		height = 600;		
+		
+		// Inicializar fractales
 		Grafico.setFrame(this, width, height);
 		
-		initFractales();
-
-//      Menu -> Exportar, etc.
-//		Agregar otros fractales
-//		Cantidad de puntos a pintar en el afin
-//		5) Go back
-//		6) Barra de progreso
-	    
-//		grafico = gAfines;
-		grafico = gConjuntos;
-		actualizarInterfaz();
-	}
-
-	private void initFractales() {		
 		gConjuntos = new GraficoConjuntos();
-		gConjuntos.setConjunto(ConjuntoJulia.SAMPLE_6);
-		gConjuntos.setThreads(10);
-		gConjuntos.setRango(-2, 2, -2, 2);
+		gConjuntos.setThreads(20);
 		
-		gAfines = GraficoAfines.SIERPINSKI;
-		gAfines.setRango(-400, 400, 0, 400);
-				
-//		// Conjuntos de Julia:
-//		int grado = 2;
-//		double real = -0.391;
-//		double imag = 0.587;
-//		Funcion f = new FuncionPolinomica(grado, new Complejo(real, imag));
-//		g.setConjunto(new ConjuntoJulia(f));
-		
-//		// Conjuntos Mandelbrot:
-//		int exp = 2;
-//		g.setConjunto(new ConjuntoMandelbrot(exp));
-		
-//		Conjuntos conexos (conjuntos de Fatou) y Conjuntos no conexos (conjuntos de Cantor).
-
+		actualizarFractal();
 	}
 	
 	private void initMenu() {
@@ -163,17 +171,50 @@ public class Fractales extends JFrame {
 
 		mnArchivo = new JMenu("Archivo");
 		menuBar.add(mnArchivo);
+		
+		mntmGuardar = new JMenuItem("Guardar Como");
+		mntmGuardar.setIcon(new ImageIcon(Fractales.class.getResource("/icon/save.png")));
+		mntmGuardar.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+		mntmGuardar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				guardarImagenComo();
+			}
+		});
+		mnArchivo.add(mntmGuardar);
+		
+		separator = new JSeparator();
+		mnArchivo.add(separator);
+		
+		mntmSalir = new JMenuItem("Salir");
+		mntmSalir.setIcon(new ImageIcon(Fractales.class.getResource("/icon/close.png")));
+		mntmSalir.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				dispose();
+			}
+		});
+		mntmSalir.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4, InputEvent.ALT_MASK));
+		mnArchivo.add(mntmSalir);
 
 		mnAyuda = new JMenu("Ayuda");
 		menuBar.add(mnAyuda);
+		
+		mntmAcercaDe = new JMenuItem("Acerca De");
+		mntmAcercaDe.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				AcercaDe acercaDe = new AcercaDe();
+				acercaDe.setVisible(true);
+			}
+		});
+		mntmAcercaDe.setIcon(new ImageIcon(Fractales.class.getResource("/icon/about.png")));
+		mnAyuda.add(mntmAcercaDe);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{400, 230, 0};
-		gbl_contentPane.rowHeights = new int[] {579, 0};
+		gbl_contentPane.rowHeights = new int[] {579};
 		gbl_contentPane.columnWeights = new double[]{1.0, 0.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{1.0, 1.0};
+		gbl_contentPane.rowWeights = new double[]{1.0};
 		contentPane.setLayout(gbl_contentPane);
 		
 	}
@@ -182,8 +223,8 @@ public class Fractales extends JFrame {
 		
 		lblImagen = new PanelImagen();
 		GridBagConstraints gbc_lblImagen = new GridBagConstraints();
-		gbc_lblImagen.fill = GridBagConstraints.VERTICAL;
-		gbc_lblImagen.insets = new Insets(0, 0, 5, 5);
+		gbc_lblImagen.fill = GridBagConstraints.BOTH;
+		gbc_lblImagen.insets = new Insets(0, 0, 0, 5);
 		gbc_lblImagen.gridx = 0;
 		gbc_lblImagen.gridy = 0;
 		contentPane.add(lblImagen, gbc_lblImagen);
@@ -198,7 +239,6 @@ public class Fractales extends JFrame {
 		scrollPaneOpciones = new JScrollPane();
 		scrollPaneOpciones.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		GridBagConstraints gbc_scrollPaneOpciones = new GridBagConstraints();
-		gbc_scrollPaneOpciones.insets = new Insets(0, 0, 5, 0);
 		gbc_scrollPaneOpciones.fill = GridBagConstraints.BOTH;
 		gbc_scrollPaneOpciones.gridx = 1;
 		gbc_scrollPaneOpciones.gridy = 0;
@@ -211,7 +251,7 @@ public class Fractales extends JFrame {
 		gbl_panelOpciones.columnWidths = new int[]{39, 0};
 		gbl_panelOpciones.rowHeights = new int[]{0, 20, 0, 0, 0};
 		gbl_panelOpciones.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_panelOpciones.rowWeights = new double[]{1.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panelOpciones.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panelOpciones.setLayout(gbl_panelOpciones);
 		
 		addPanelGrafico();
@@ -222,73 +262,74 @@ public class Fractales extends JFrame {
 		
 		addPanelProcesamiento();
 
-//		chckbxAceleracinDeReclculo = new JCheckBox("Aceleraci\u00F3n de rec\u00E1lculo");
-//		chckbxAceleracinDeReclculo.setEnabled(false);
-//		chckbxAceleracinDeReclculo.addChangeListener(new ChangeListener() {
-//			public void stateChanged(ChangeEvent arg0) {
-////				g.setAceleracionMover(chckbxAceleracinDeReclculo.isSelected());
-//			}
-//		});
-//		chckbxAceleracinDeReclculo.setSelected(true);
-//		GridBagConstraints gbc_chckbxAceleracinDeReclculo = new GridBagConstraints();
-//		gbc_chckbxAceleracinDeReclculo.anchor = GridBagConstraints.WEST;
-//		gbc_chckbxAceleracinDeReclculo.gridwidth = 2;
-//		gbc_chckbxAceleracinDeReclculo.insets = new Insets(5, 15, 5, 5);
-//		gbc_chckbxAceleracinDeReclculo.gridx = 0;
-//		gbc_chckbxAceleracinDeReclculo.gridy = 2;
-//		panelProcesamiento.add(chckbxAceleracinDeReclculo, gbc_chckbxAceleracinDeReclculo);
-
 	}
 
 	private void addPanelGrafico() {
-		panelGrafico = new JPanel();
-		panelGrafico.setBorder(new TitledBorder(null, "Gr\u00E1fico", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		GridBagConstraints gbc_panelGrafico = new GridBagConstraints();
-		gbc_panelGrafico.insets = new Insets(5, 5, 5, 0);
-		gbc_panelGrafico.fill = GridBagConstraints.BOTH;
-		gbc_panelGrafico.gridx = 0;
-		gbc_panelGrafico.gridy = 0;
-		panelOpciones.add(panelGrafico, gbc_panelGrafico);
-		GridBagLayout gbl_panelGrafico = new GridBagLayout();
-		gbl_panelGrafico.columnWidths = new int[]{0, 0};
-		gbl_panelGrafico.rowHeights = new int[]{0, 0};
-		gbl_panelGrafico.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_panelGrafico.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-		panelGrafico.setLayout(gbl_panelGrafico);
+		panelFractal = new JPanel();
+		panelFractal.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Fractal", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(0, 0, 0)));
+		GridBagConstraints gbc_panelFractal = new GridBagConstraints();
+		gbc_panelFractal.insets = new Insets(5, 5, 5, 0);
+		gbc_panelFractal.fill = GridBagConstraints.BOTH;
+		gbc_panelFractal.gridx = 0;
+		gbc_panelFractal.gridy = 0;
+		panelOpciones.add(panelFractal, gbc_panelFractal);
+		GridBagLayout gbl_panelFractal = new GridBagLayout();
+		gbl_panelFractal.columnWidths = new int[]{0, 0};
+		gbl_panelFractal.rowHeights = new int[]{0, 0, 0, 0};
+		gbl_panelFractal.columnWeights = new double[]{1.0, Double.MIN_VALUE};
+		gbl_panelFractal.rowWeights = new double[]{0.0, 0.0, 0.0, Double.MIN_VALUE};
+		panelFractal.setLayout(gbl_panelFractal);
 		
-		comboFractal = new JComboBox();
+		comboFractal = new JComboBox<String>();
 		comboFractal.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent arg0) {
-				if (arg0.getStateChange() == 1){
-					String st = arg0.getItem().toString();
-					switch (st) {
-					case "Conjunto de Mandelbrot":
-						gConjuntos.setConjunto(ConjuntoMandelbrot.CUADRATICO);
-						break;
-					case "Disco de Siegel":
-						gConjuntos.setConjunto(ConjuntoJulia.DISCO_SIEGEL);
-						break;
-					case "Fractal Dendrita":
-						gConjuntos.setConjunto(ConjuntoJulia.DENDRITA);
-						break;
-					case "Conejo de Douady":
-						gConjuntos.setConjunto(ConjuntoJulia.CONEJO_DOUADY);
-						break;
-					default:
-						break;
-					}
-					gConjuntos.setRango(-2, 2, -2, 2);
-					actualizarInterfaz();
+			public void itemStateChanged(ItemEvent item) {
+				if (item.getStateChange() == ItemEvent.SELECTED){
+					actualizarFractal();
 				}
 			}
 		});
-		comboFractal.setModel(new DefaultComboBoxModel(new String[] {"Conjunto de Mandelbrot", "Disco de Siegel", "Fractal Dendrita", "Conejo de Douady"}));
+		
+		comboTipo = new JComboBox<String>();
+		comboTipo.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent item) {
+				if (item.getStateChange() == ItemEvent.SELECTED){
+					mostrarListaFractales((String) item.getItem());
+				}
+			}
+		});
+		comboTipo.setModel(new DefaultComboBoxModel<String>(new String[] {"Conjuntos de Complejos", "Transformaciones Afines"}));
+		comboTipo.setSelectedIndex(0);
+		GridBagConstraints gbc_comboTipo = new GridBagConstraints();
+		gbc_comboTipo.insets = new Insets(10, 10, 5, 10);
+		gbc_comboTipo.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboTipo.gridx = 0;
+		gbc_comboTipo.gridy = 0;
+		panelFractal.add(comboTipo, gbc_comboTipo);
+		modeloFractalesComplejos = new DefaultComboBoxModel<String>(new String[] {"Conjunto de Mandelbrot (2)", "Conjunto de Mandelbrot (5)", "Conjunto de Mandelbrot (10)", "Disco de Siegel", "Fractal Dendrita", "Conejo de Douady", "Sample 1", "Sample 2", "Sample 3"});
+		modeloFractalesAfines = new DefaultComboBoxModel<String>(new String[] {"Alfombra de Sierpinski", "Helecho de Bransley"});
+		comboFractal.setModel(modeloFractalesComplejos);
 		comboFractal.setSelectedIndex(0);
 		GridBagConstraints gbc_comboFractal = new GridBagConstraints();
+		gbc_comboFractal.insets = new Insets(5, 10, 10, 10);
 		gbc_comboFractal.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboFractal.gridx = 0;
-		gbc_comboFractal.gridy = 0;
-		panelGrafico.add(comboFractal, gbc_comboFractal);
+		gbc_comboFractal.gridy = 1;
+		panelFractal.add(comboFractal, gbc_comboFractal);
+		
+		sliderProfundidad = new JSlider();
+		sliderProfundidad.setMinimum(1);
+		sliderProfundidad.setValue(1);
+		sliderProfundidad.setMaximum(10);
+		sliderProfundidad.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				int prof = sliderProfundidad.getValue();
+				GraficoAfines.setProfundidad(prof);
+				grafico.calcular();
+			}
+		});
+		gbc_sliderProfundidad = new GridBagConstraints();
+		gbc_sliderProfundidad.gridx = 0;
+		gbc_sliderProfundidad.gridy = 2;
 		
 	}
 
@@ -312,7 +353,7 @@ public class Fractales extends JFrame {
 		GridBagConstraints gbc_lblRangoEjeX = new GridBagConstraints();
 		gbc_lblRangoEjeX.anchor = GridBagConstraints.WEST;
 		gbc_lblRangoEjeX.gridwidth = 3;
-		gbc_lblRangoEjeX.insets = new Insets(5, 5, 5, 5);
+		gbc_lblRangoEjeX.insets = new Insets(5, 5, 5, 0);
 		gbc_lblRangoEjeX.gridx = 0;
 		gbc_lblRangoEjeX.gridy = 0;
 		panelCoordenadas.add(lblRangoEjeX, gbc_lblRangoEjeX);
@@ -329,7 +370,7 @@ public class Fractales extends JFrame {
 
 		lblA = new JLabel("a");
 		GridBagConstraints gbc_lblA = new GridBagConstraints();
-		gbc_lblA.insets = new Insets(5, 0, 5, 0);
+		gbc_lblA.insets = new Insets(5, 0, 5, 5);
 		gbc_lblA.gridx = 1;
 		gbc_lblA.gridy = 1;
 		panelCoordenadas.add(lblA, gbc_lblA);
@@ -348,7 +389,7 @@ public class Fractales extends JFrame {
 		GridBagConstraints gbc_lblRangoEjeY = new GridBagConstraints();
 		gbc_lblRangoEjeY.anchor = GridBagConstraints.WEST;
 		gbc_lblRangoEjeY.gridwidth = 3;
-		gbc_lblRangoEjeY.insets = new Insets(5, 5, 5, 5);
+		gbc_lblRangoEjeY.insets = new Insets(5, 5, 5, 0);
 		gbc_lblRangoEjeY.gridx = 0;
 		gbc_lblRangoEjeY.gridy = 2;
 		panelCoordenadas.add(lblRangoEjeY, gbc_lblRangoEjeY);
@@ -365,7 +406,7 @@ public class Fractales extends JFrame {
 
 		lblA_1 = new JLabel("a");
 		GridBagConstraints gbc_lblA_1 = new GridBagConstraints();
-		gbc_lblA_1.insets = new Insets(5, 0, 5, 0);
+		gbc_lblA_1.insets = new Insets(5, 0, 5, 5);
 		gbc_lblA_1.gridx = 1;
 		gbc_lblA_1.gridy = 3;
 		panelCoordenadas.add(lblA_1, gbc_lblA_1);
@@ -379,14 +420,40 @@ public class Fractales extends JFrame {
 		gbc_spinYMax.gridy = 3;
 		panelCoordenadas.add(spinYMax, gbc_spinYMax);
 		spinYMax.setModel(new SpinnerNumberModel(2.0, -2.0, 2.0, 0.01));
+		
+		panel = new JPanel();
+		GridBagConstraints gbc_panel = new GridBagConstraints();
+		gbc_panel.fill = GridBagConstraints.BOTH;
+		gbc_panel.gridwidth = 3;
+		gbc_panel.insets = new Insets(0, 0, 0, 5);
+		gbc_panel.gridx = 0;
+		gbc_panel.gridy = 4;
+		panelCoordenadas.add(panel, gbc_panel);
+		GridBagLayout gbl_panel = new GridBagLayout();
+		gbl_panel.columnWidths = new int[]{39, 30, 0};
+		gbl_panel.rowHeights = new int[]{0, 0};
+		gbl_panel.columnWeights = new double[]{1.0, 1.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		panel.setLayout(gbl_panel);
 
 		btnGraficar = new JButton("Graficar");
 		GridBagConstraints gbc_btnGraficar = new GridBagConstraints();
-		gbc_btnGraficar.gridwidth = 3;
-		gbc_btnGraficar.insets = new Insets(10, 0, 5, 0);
+		gbc_btnGraficar.insets = new Insets(5, 0, 5, 5);
 		gbc_btnGraficar.gridx = 0;
-		gbc_btnGraficar.gridy = 4;
-		panelCoordenadas.add(btnGraficar, gbc_btnGraficar);
+		gbc_btnGraficar.gridy = 0;
+		panel.add(btnGraficar, gbc_btnGraficar);
+		
+		btnRestablecer = new JButton("Restablecer");
+		btnRestablecer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				actualizarFractal();
+			}
+		});
+		GridBagConstraints gbc_btnRestablecer = new GridBagConstraints();
+		gbc_btnRestablecer.insets = new Insets(5, 5, 5, 0);
+		gbc_btnRestablecer.gridx = 1;
+		gbc_btnRestablecer.gridy = 0;
+		panel.add(btnRestablecer, gbc_btnRestablecer);
 		btnGraficar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				graficar();
@@ -469,7 +536,7 @@ public class Fractales extends JFrame {
 		panelAcciones.add(chckbxZoom, gbc_chckbxZoom);
 		
 		// Label Punto actual
-		lblPuntoactual = new JLabel("PuntoActual");
+		lblPuntoactual = new JLabel("(0, 0)");
 		GridBagConstraints gbc_lblPuntoactual = new GridBagConstraints();
 		gbc_lblPuntoactual.gridx = 0;
 		gbc_lblPuntoactual.gridy = 3;
@@ -498,10 +565,11 @@ public class Fractales extends JFrame {
 		
 		// CheckBox Transicion Animada
 		chckbxAnimarTransicion = new JCheckBox("Animar Transicion");
+		chckbxAnimarTransicion.setSelected(true);
 		GridBagConstraints gbc_chckbxAnimarTransicion = new GridBagConstraints();
 		gbc_chckbxAnimarTransicion.anchor = GridBagConstraints.WEST;
 		gbc_chckbxAnimarTransicion.gridwidth = 2;
-		gbc_chckbxAnimarTransicion.insets = new Insets(5, 15, 5, 5);
+		gbc_chckbxAnimarTransicion.insets = new Insets(5, 15, 5, 0);
 		gbc_chckbxAnimarTransicion.gridx = 0;
 		gbc_chckbxAnimarTransicion.gridy = 0;
 		panelProcesamiento.add(chckbxAnimarTransicion, gbc_chckbxAnimarTransicion);
@@ -524,11 +592,11 @@ public class Fractales extends JFrame {
 		gbc_spinThreads.gridx = 0;
 		gbc_spinThreads.gridy = 2;
 		panelProcesamiento.add(spinThreads, gbc_spinThreads);
-		spinThreads.setModel(new SpinnerNumberModel(10, 1, 50, 1));
+		spinThreads.setModel(new SpinnerNumberModel(20, 1, 50, 1));
 		spinThreads.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
 				if(chckbxThread.isSelected()){
-					gConjuntos.setThreads((int) spinThreads.getValue());					
+					gConjuntos.setThreads((Integer) spinThreads.getValue());					
 				}
 			}
 		});
@@ -546,7 +614,7 @@ public class Fractales extends JFrame {
 				System.out.println("Active");
 				if (chckbxThread.isSelected()){
 					spinThreads.setEnabled(true);
-					gConjuntos.setThreads((int) spinThreads.getValue());					
+					gConjuntos.setThreads((Integer) spinThreads.getValue());					
 				}else{
 					spinThreads.setEnabled(false);
 					gConjuntos.setThreads(1);
@@ -554,12 +622,20 @@ public class Fractales extends JFrame {
 			}
 		});
 		
+		progressCalculo = new JProgressBar();
+		GridBagConstraints gbc_progressCalculo = new GridBagConstraints();
+		gbc_progressCalculo.gridwidth = 3;
+		gbc_progressCalculo.insets = new Insets(5, 10, 5, 10);
+		gbc_progressCalculo.gridx = 0;
+		gbc_progressCalculo.gridy = 3;
+		panelProcesamiento.add(progressCalculo, gbc_progressCalculo);
+		
 		// Label Tiempo de procesamiento
 		lblTiempoprocesamiento = new JLabel();
-		lblTiempoprocesamiento.setText("TiempoProcesamiento");
+		lblTiempoprocesamiento.setText("0ms");
 		GridBagConstraints gbc_lblTiempoprocesamiento = new GridBagConstraints();
 		gbc_lblTiempoprocesamiento.gridwidth = 2;
-		gbc_lblTiempoprocesamiento.insets = new Insets(5, 5, 0, 0);
+		gbc_lblTiempoprocesamiento.insets = new Insets(5, 5, 0, 5);
 		gbc_lblTiempoprocesamiento.gridx = 0;
 		gbc_lblTiempoprocesamiento.gridy = 4;
 		panelProcesamiento.add(lblTiempoprocesamiento, gbc_lblTiempoprocesamiento);
@@ -567,38 +643,114 @@ public class Fractales extends JFrame {
 		// Valores por defecto
 		chckbxThread.setSelected(true);
 	}
+	
+	protected void mostrarListaFractales(String tipo) {
+		switch (tipo) {
+		case "Conjuntos de Complejos":
+			comboFractal.setModel(modeloFractalesComplejos);
+			break;
+		case "Transformaciones Afines":
+			comboFractal.setModel(modeloFractalesAfines);
+			break;
+		default:
+			break;
+		}
+		actualizarFractal();
+	}
 
+	// Actualizar fractal mediante cambios en los combo de seleccion de fractal
+	protected void actualizarFractal() {
+		String fractalTipo = (String) comboTipo.getSelectedItem();
+		String fractal = (String) comboFractal.getSelectedItem();
+		
+		// Elegir fractal especifico
+		switch (fractal) {
+		case "Conjunto de Mandelbrot (2)":
+			gConjuntos.setConjunto(ConjuntoMandelbrot.CUADRATICO);
+			break;
+		case "Conjunto de Mandelbrot (5)":
+			gConjuntos.setConjunto(ConjuntoMandelbrot.ORDEN_5);
+			break;
+		case "Conjunto de Mandelbrot (10)":
+			gConjuntos.setConjunto(ConjuntoMandelbrot.ORDEN_10);
+			break;
+		case "Disco de Siegel":
+			gConjuntos.setConjunto(ConjuntoJulia.DISCO_SIEGEL);
+			break;
+		case "Fractal Dendrita":
+			gConjuntos.setConjunto(ConjuntoJulia.DENDRITA);
+			break;
+		case "Conejo de Douady":
+			gConjuntos.setConjunto(ConjuntoJulia.CONEJO_DOUADY);
+			break;
+		case "Sample 1":
+			gConjuntos.setConjunto(ConjuntoJulia.SAMPLE_1);
+			break;
+		case "Sample 2":
+			gConjuntos.setConjunto(ConjuntoJulia.SAMPLE_2);
+			break;
+		case "Sample 3":
+			gConjuntos.setConjunto(ConjuntoJulia.SAMPLE_3);
+			break;
+		case "Alfombra de Sierpinski":
+			gAfines = GraficoAfines.SIERPINSKI;
+			sliderProfundidad.setMaximum(10);
+			break;
+		case "Helecho de Bransley":
+			gAfines = GraficoAfines.HELECHO;
+			sliderProfundidad.setMaximum(25);
+			break;
+		default:
+			break;
+		}
+				
+		// Elegir tipo de fractal
+		switch (fractalTipo) {
+		case "Conjuntos de Complejos":
+			panelFractal.remove(sliderProfundidad);
+			grafico = gConjuntos;
+			gConjuntos.setRango(-2, 2, -2, 2);
+			break;
+		case "Transformaciones Afines":
+			panelFractal.add(sliderProfundidad, gbc_sliderProfundidad);
+			grafico = gAfines;
+			gAfines.setRango(-400, 400, 100, 500);
+			break;
+		default:
+			break;
+		}
+	}
+	
 	// Grafico mediante coordenadas
 	protected void graficar() {
-		double xMin = (double) spinXMin.getValue();
-		double xMax = (double) spinXMax.getValue();
-		double yMin = (double) spinYMin.getValue();
-		double yMax = (double) spinYMax.getValue();
+		double xMin = (Double) spinXMin.getValue();
+		double xMax = (Double) spinXMax.getValue();
+		double yMin = (Double) spinYMin.getValue();
+		double yMax = (Double) spinYMax.getValue();
 
-		grafico.setRango(xMin, xMax, yMin, yMax);		
-		actualizarInterfaz();
+		grafico.setRango(xMin, xMax, yMin, yMax);
 	}
 
 	// Grafico mediante accion Mover (MouseDragged)
 	public void mover(int f, int c){
 		grafico.mover(f, c);
-		actualizarInterfaz();
 	}
 
 	// Grafico mediante accion Zoom (MousePressed y MouseRelease)
 	public void zoom(int fMin, int fMax, int cMin, int cMax){
-		grafico.zoom(fMin, fMax, cMin, cMax);		
-		actualizarInterfaz();
+		grafico.zoom(fMin, fMax, cMin, cMax);
 	}
 
-	private void actualizarInterfaz(){
+	public void actualizarInterfaz(){
+//		System.out.println("Actualizar interfaz");
+		cargado = true;
+		
 		boolean interpolar = ! (chckbxMover.isSelected() && chckbxMovimInteractivo.isSelected()) && chckbxAnimarTransicion.isSelected();
 		
 		// Renderizar imagen
 		Image im = grafico.generarImagen();
+		System.out.println("Actualizar interfaz");
 		lblImagen.setImagen(im, interpolar);
-//	    lblImagen.setIcon(new ImageIcon(im));
-//	    lblImagen.setMaximumSize(new Dimension(width, height));
 
 		// Rango de ejes
 		spinXMin.setValue(grafico.getxMin());
@@ -611,7 +763,7 @@ public class Fractales extends JFrame {
 	}
 
 	// Actualizar posicion del puntero (MouseMove)
-	public void setPosicionActual(int f, int c) {
+	public void setPosicionActual(int f, int c) {		
 		double x = grafico.getCtoX(c);
 		double y = grafico.getFtoY(f);
 
@@ -620,6 +772,54 @@ public class Fractales extends JFrame {
 	
 	public PanelImagen getImagen() {
 		return lblImagen;
+	}
+	
+	// Menu Bar
+	
+	protected void guardarImagenComo() {
+		JFileChooser fc = new JFileChooser("");
+
+        // Mostrar la ventana para abrir archivo y recoger la respuesta
+        fc.setFileFilter(new FiltroArchivoPNG());
+        int respuesta = fc.showSaveDialog(null);
+
+        // Comprobar si se ha pulsado Aceptar
+        if (respuesta == JFileChooser.APPROVE_OPTION){
+        	String path = fc.getSelectedFile().getAbsolutePath();
+        	
+        	if (! path.endsWith(".png")){
+        		path += ".png";
+        	}
+        	
+            guardarImagen(new File(path));
+        }
+		
+	}
+
+	private void guardarImagen(File f) {
+		try {
+			Image im = grafico.generarImagen();
+			BufferedImage buffIm = new BufferedImage(im.getWidth(null), im.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+			buffIm.getGraphics().drawImage(im, 0, 0, null);
+			ImageIO.write(buffIm, "png", f);
+		} catch (IOException e) {
+			System.out.println("Error de escritura");
+		}		
+	}
+	
+	public void resetProgress(){
+		progressCalculo.setValue(0);
+		filasProcesadas = 0;
+	}
+	
+	public void addProgress(int f){
+		filasProcesadas += f;
+		int val = filasProcesadas * 100 / gConjuntos.getHeight();
+		progressCalculo.setValue(val);
+	}
+
+	public boolean isCargado() {
+		return cargado;
 	}
 	
 }

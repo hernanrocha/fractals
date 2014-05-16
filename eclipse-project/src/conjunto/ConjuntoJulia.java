@@ -1,9 +1,6 @@
 package conjunto;
-import basic.Complejo;
 
-/**
- * 
- */
+import basic.Complejo;
 
 /** Conjuntos de Julia
  * Jc = Conjunto de Julia de parámetro c

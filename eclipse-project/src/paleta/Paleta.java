@@ -22,7 +22,7 @@ public abstract class Paleta {
 
 	// Agregar un par (Color - limite)
 	public void addColor(Color c, Integer limit){
-
+		
 		if(valores.indexOf(limit) != -1){
 			modifyColor(valores.indexOf(limit), c);
 			return;
@@ -120,6 +120,7 @@ public abstract class Paleta {
 	}
 
 	public abstract void reset();
+	
 	public abstract void save(File f);
 
 }
