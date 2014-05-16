@@ -611,7 +611,6 @@ public class Fractales extends JFrame {
 		panelProcesamiento.add(lblThreads, gbc_lblThreads);
 		chckbxThread.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Active");
 				if (chckbxThread.isSelected()){
 					spinThreads.setEnabled(true);
 					gConjuntos.setThreads((Integer) spinThreads.getValue());					
@@ -749,7 +748,7 @@ public class Fractales extends JFrame {
 		
 		// Renderizar imagen
 		Image im = grafico.generarImagen();
-		System.out.println("Actualizar interfaz");
+//		System.out.println("Actualizar interfaz");
 		lblImagen.setImagen(im, interpolar);
 
 		// Rango de ejes
